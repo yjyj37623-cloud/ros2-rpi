@@ -1,0 +1,24 @@
+running develop
+running egg_info
+creating sciroad1.egg-info
+writing sciroad1.egg-info/PKG-INFO
+writing dependency_links to sciroad1.egg-info/dependency_links.txt
+writing entry points to sciroad1.egg-info/entry_points.txt
+writing requirements to sciroad1.egg-info/requires.txt
+writing top-level names to sciroad1.egg-info/top_level.txt
+writing manifest file 'sciroad1.egg-info/SOURCES.txt'
+reading manifest file 'sciroad1.egg-info/SOURCES.txt'
+writing manifest file 'sciroad1.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/lib/python3.12/site-packages/sciroad1.egg-link (link to .)
+Installing gimbal_control_node script to /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/lib/sciroad1
+
+Installed /home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1
+running symlink_data
+creating /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/share/ament_index
+creating /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/share/ament_index/resource_index
+creating /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/share/ament_index/resource_index/packages
+symbolically linking /home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1/resource/sciroad1 -> /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/share/ament_index/resource_index/packages
+symbolically linking /home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1/package.xml -> /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/share/sciroad1
+creating /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/share/sciroad1/launch
+symbolically linking /home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1/launch/gimbal.launch.py -> /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/share/sciroad1/launch

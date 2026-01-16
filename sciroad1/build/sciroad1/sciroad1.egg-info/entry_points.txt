@@ -1,0 +1,2 @@
+[console_scripts]
+gimbal_control_node = sciroad1.turntable_control_node:main

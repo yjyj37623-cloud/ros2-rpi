@@ -7,6 +7,7 @@ import serial
 import math
 
 from sensor_msgs.msg import Imu, NavSatFix
+from std_msgs.msg import Float64
 from geometry_msgs.msg import Quaternion
 from tf_transformations import euler_from_quaternion, quaternion_from_euler
 
@@ -33,10 +34,12 @@ class SerialBridge(Node):
         # ========= 订阅（发送给对方） =========
         self.create_subscription(Imu, 'handsfree/imu', self.imu_callback, 10)
         self.create_subscription(NavSatFix, 'gps/fix', self.gps_callback, 10)
+        self.create_subscription(Float64, 'gps/heading', self.heading_callback, 10)
 
         # ========= 发布（接收自对方） =========
         self.target_imu_pub = self.create_publisher(Imu, 'target/imu', 10)
         self.target_gps_pub = self.create_publisher(NavSatFix, 'target/gps', 10)
+        self.target_heading_pub = self.create_publisher(Float64, 'target/heading', 10)
 
         # ========= 串口接收 =========
         self.buffer = ""
@@ -70,6 +73,12 @@ class SerialBridge(Node):
         )
         self.send_serial(gps_str)
 
+    def heading_callback(self, msg: Float64):
+        # 将 rad 转为度发送
+        heading_deg = math.degrees(msg.data)
+        heading_str = f"HEADING,{heading_deg:.2f}\n"
+        self.send_serial(heading_str)
+
     def send_serial(self, text: str):
         try:
             self.ser.write(text.encode('utf-8'))
@@ -94,6 +103,8 @@ class SerialBridge(Node):
                     self.parse_target_imu(line)
                 elif line.startswith("GPS"):
                     self.parse_target_gps(line)
+                elif line.startswith("HEADING"):
+                    self.parse_target_heading(line)
 
         except Exception as e:
             self.get_logger().warn(f"串口接收异常: {e}")
@@ -143,6 +154,20 @@ class SerialBridge(Node):
         except Exception as e:
             self.get_logger().warn(f"解析目标 GPS 失败: {e}")
 
+    def parse_target_heading(self, line: str):
+        try:
+            parts = line.split(',')
+            if len(parts) != 2:
+                return
+
+            deg = float(parts[1])
+            msg = Float64()
+            msg.data = math.radians(deg)  # 转回 rad
+            self.target_heading_pub.publish(msg)
+
+        except Exception as e:
+            self.get_logger().warn(f"解析目标 HEADING 失败: {e}")
+
 
 def main(args=None):
     rclpy.init(args=args)
@@ -151,8 +176,9 @@ def main(args=None):
         rclpy.spin(node)
     except KeyboardInterrupt:
         pass
-    node.destroy_node()
-    rclpy.shutdown()
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
 
 
 if __name__ == '__main__':

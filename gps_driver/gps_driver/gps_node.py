@@ -7,7 +7,7 @@ import math
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix, NavSatStatus
-from std_msgs.msg import Header
+from std_msgs.msg import Header, Float64
 
 # ================= 工具函数 =================
 def find_ttyUSB():
@@ -17,7 +17,7 @@ def find_ttyUSB():
 
 KNOT_TO_MPS = 0.514444444
 
-def NMEA_pow_n10(n): 
+def NMEA_pow_n10(n):
     return math.pow(10, -n)
 
 def NMEA_Str2num(buf):
@@ -25,7 +25,8 @@ def NMEA_Str2num(buf):
     if not buf or buf[0] in (',', '*'):
         return 0, 0
     neg = buf.startswith('-')
-    if neg: buf = buf[1:]
+    if neg:
+        buf = buf[1:]
     if '.' in buf:
         integer, fraction = buf.split('.', 1)
     else:
@@ -41,7 +42,7 @@ def NMEA_Str2num(buf):
         res = -res
     return res, flen
 
-# ================= NMEA 解析 =================
+# ================= NMEA 数据结构 =================
 class GxGGA:
     def __init__(self):
         self.latitude = 0.0
@@ -50,38 +51,72 @@ class GxGGA:
         self.sat_num = 0
         self.gps_state = 0
 
+# ================= NMEA 解析函数 =================
 def parse_GxGGA(buf):
-    gga = GxGGA()
     if not (buf.startswith("$GPGGA") or buf.startswith("$GNGGA")):
         return None
 
     parts = buf.split(',')
-    if len(parts) > 2 and parts[2]:
+    gga = GxGGA()
+
+    # latitude
+    if len(parts) > 3 and parts[2]:
         val, dec = NMEA_Str2num(parts[2])
-        tmp_double = val * NMEA_pow_n10(dec + 2)
-        tmp_int = int(tmp_double)
-        tmp_float = tmp_double - tmp_int
+        tmp = val * NMEA_pow_n10(dec + 2)
+        ideg = int(tmp)
+        frac = tmp - ideg
         pos_neg = -1 if parts[3] == 'S' else 1
-        gga.latitude = (tmp_int + tmp_float * 1.6666666667) * pos_neg
+        gga.latitude = (ideg + frac * 1.6666666667) * pos_neg
 
-    if len(parts) > 4 and parts[4]:
+    # longitude
+    if len(parts) > 5 and parts[4]:
         val, dec = NMEA_Str2num(parts[4])
-        tmp_double = val * NMEA_pow_n10(dec + 2)
-        tmp_int = int(tmp_double)
-        tmp_float = tmp_double - tmp_int
+        tmp = val * NMEA_pow_n10(dec + 2)
+        ideg = int(tmp)
+        frac = tmp - ideg
         pos_neg = -1 if parts[5] == 'W' else 1
-        gga.longitude = (tmp_int + tmp_float * 1.6666666667) * pos_neg
+        gga.longitude = (ideg + frac * 1.6666666667) * pos_neg
 
+    # fix state
+    if len(parts) > 6 and parts[6]:
+        gga.gps_state = int(parts[6])
+
+    # altitude
     if len(parts) > 9 and parts[9]:
         val, dec = NMEA_Str2num(parts[9])
         gga.altitude = val * NMEA_pow_n10(dec)
 
     return gga
 
+
+def parse_HEADINGA(buf):
+    """
+    Ublox #HEADINGA 航向角解析
+    输出：ENU 坐标系下的航向角（rad）
+    """
+    if not buf.startswith("#HEADINGA"):
+        return None
+
+    parts = buf.split(',')
+    if len(parts) < 13 or not parts[12]:
+        return None
+
+    val, dec = NMEA_Str2num(parts[12])
+    heading_deg = val * NMEA_pow_n10(dec)
+
+    # ===== 与 STM32 完全一致的坐标变换 =====
+    if heading_deg <= 270.0:
+        heading_rad = (heading_deg - 90.0) / 180.0 * math.pi
+    else:
+        heading_rad = (heading_deg - 450.0) / 180.0 * math.pi
+
+    return heading_rad
+
 # ================= ROS2 节点 =================
 class GPSPublisher(Node):
     def __init__(self):
         super().__init__('gps_publisher')
+
         self.declare_parameter('port', '/dev/ttyUSB0')
         self.declare_parameter('baudrate', 115200)
 
@@ -95,14 +130,20 @@ class GPSPublisher(Node):
             self.get_logger().error(f"❌ 打开串口失败: {e}")
             raise SystemExit
 
-        self.publisher = self.create_publisher(NavSatFix, 'gps/fix', 10)
+        # publishers
+        self.fix_pub = self.create_publisher(NavSatFix, 'gps/fix', 10)
+        self.heading_pub = self.create_publisher(Float64, 'gps/heading', 10)
+
         self.buffer = ""
-        self.NMEA_HEADERS = ["$GPGGA", "$GNGGA"]
+        self.NMEA_HEADERS = ["$GPGGA", "$GNGGA", "#HEADINGA"]
+
         self.timer = self.create_timer(0.2, self.timer_callback)  # 5Hz
 
     def timer_callback(self):
         try:
-            data = self.serial.read(self.serial.in_waiting or 1).decode('ascii', errors='ignore')
+            data = self.serial.read(self.serial.in_waiting or 1).decode(
+                'ascii', errors='ignore'
+            )
             self.buffer += data
 
             while True:
@@ -113,6 +154,7 @@ class GPSPublisher(Node):
                     if idx != -1 and (start_idx == -1 or idx < start_idx):
                         start_idx = idx
                         header = h
+
                 if start_idx == -1:
                     break
 
@@ -123,7 +165,8 @@ class GPSPublisher(Node):
                 line = self.buffer[start_idx:end_idx].strip()
                 self.buffer = self.buffer[end_idx + 1:]
 
-                if header in self.NMEA_HEADERS:
+                # ===== GGA：位置 =====
+                if header in ("$GPGGA", "$GNGGA"):
                     gga = parse_GxGGA(line)
                     if gga:
                         msg = NavSatFix()
@@ -131,20 +174,32 @@ class GPSPublisher(Node):
                         msg.header.stamp = self.get_clock().now().to_msg()
                         msg.header.frame_id = "gps_link"
 
-                        msg.status.status = NavSatStatus.STATUS_FIX if gga.gps_state > 0 else NavSatStatus.STATUS_NO_FIX
+                        msg.status.status = (
+                            NavSatStatus.STATUS_FIX
+                            if gga.gps_state > 0
+                            else NavSatStatus.STATUS_NO_FIX
+                        )
                         msg.status.service = NavSatStatus.SERVICE_GPS
 
                         msg.latitude = gga.latitude
                         msg.longitude = gga.longitude
                         msg.altitude = gga.altitude
-                        msg.position_covariance = [0.0]*9
+                        msg.position_covariance = [0.0] * 9
                         msg.position_covariance_type = NavSatFix.COVARIANCE_TYPE_UNKNOWN
 
-                        self.publisher.publish(msg)
+                        self.fix_pub.publish(msg)
 
-                        # 🔹 打印调试信息到终端
-                        print(f"[DEBUG] NMEA: {line}")
-                        print(f"[DEBUG] Parsed: lat={gga.latitude:.6f}, lon={gga.longitude:.6f}, alt={gga.altitude:.2f}")
+                # ===== HEADINGA：航向 =====
+                elif header == "#HEADINGA":
+                    heading_rad = parse_HEADINGA(line)
+                    if heading_rad is not None:
+                        msg = Float64()
+                        msg.data = heading_rad
+                        self.heading_pub.publish(msg)
+
+                        self.get_logger().debug(
+                            f"HEADINGA(rad) = {heading_rad:.3f}"
+                        )
 
         except Exception as e:
             self.get_logger().warn(f"GPS 读取异常: {e}")

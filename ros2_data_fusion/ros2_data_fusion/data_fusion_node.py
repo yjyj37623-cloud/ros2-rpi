@@ -6,6 +6,7 @@ from rclpy.node import Node
 import math
 from sensor_msgs.msg import Imu, NavSatFix
 from geometry_msgs.msg import Vector3
+from std_msgs.msg import Float64
 from tf_transformations import euler_from_quaternion
 
 EARTH_RADIUS = 6371000.0  # m
@@ -65,38 +66,32 @@ class DataFusionNode(Node):
         self.create_subscription(Imu, 'handsfree/imu', self.imu_callback, 10)
         self.create_subscription(NavSatFix, 'gps/fix', self.gps_callback, 10)
         self.create_subscription(NavSatFix, 'target/gps', self.target_gps_callback, 10)
+        self.create_subscription(Float64, 'target/heading', self.heading_callback, 10)
 
         # 发布
+        self.pub_gimbal_cmd = self.create_publisher(Vector3, '/track/gimbal_cmd', 10)
         self.pub_target_angles = self.create_publisher(Vector3, 'target/angles', 10)
-        self.pub_pid_output = self.create_publisher(Vector3, 'pid/output', 10)
 
         # 状态量
         self.current_gps = None
         self.target_gps = None
-        self.imu_yaw = 0.0
+        self.current_heading_deg = None  # GPS/航向解算结果
         self.imu_pitch = 0.0
-        self.imu_wz = 0.0
-        self.imu_wy = 0.0
 
-        # PID
-        self.outer_pid_yaw = PID(0.05, 0.0, 0.01, 0.5)
-        self.outer_pid_pitch = PID(0.05, 0.0, 0.01, 0.5)
-        self.inner_pid_yaw = PID(0.08, 0.0, 0.02, 0.75)
-        self.inner_pid_pitch = PID(0.08, 0.0, 0.02, 0.75)
+        # PID（输出角速度）
+        self.pid_yaw = PID(0.08, 0.0, 0.02, 2.0)
+        self.pid_pitch = PID(0.08, 0.0, 0.02, 2.0)
 
         self.last_time = self.get_clock().now()
         self.create_timer(0.02, self.run_control)  # 50 Hz
 
-        self.get_logger().info("🧠 数据处理 / 控制节点已启动")
+        self.get_logger().info("🧠 数据处理 / 控制节点已启动（天线反装，yaw 已补偿 180°）")
 
     # ========= 回调 =========
     def imu_callback(self, msg):
         q = msg.orientation
-        roll, pitch, yaw = euler_from_quaternion([q.x, q.y, q.z, q.w])
+        _, pitch, _ = euler_from_quaternion([q.x, q.y, q.z, q.w])
         self.imu_pitch = math.degrees(pitch)
-        self.imu_yaw = (math.degrees(yaw) + 360) % 360
-        self.imu_wy = msg.angular_velocity.y
-        self.imu_wz = msg.angular_velocity.z
 
     def gps_callback(self, msg):
         self.current_gps = {'lat': msg.latitude, 'lon': msg.longitude, 'alt': msg.altitude}
@@ -104,9 +99,12 @@ class DataFusionNode(Node):
     def target_gps_callback(self, msg):
         self.target_gps = {'lat': msg.latitude, 'lon': msg.longitude, 'alt': msg.altitude}
 
+    def heading_callback(self, msg: Float64):
+        self.current_heading_deg = (math.degrees(msg.data) + 360) % 360
+
     # ========= 控制逻辑 =========
     def run_control(self):
-        if self.current_gps is None or self.target_gps is None:
+        if self.current_gps is None or self.target_gps is None or self.current_heading_deg is None:
             return
 
         now = self.get_clock().now()
@@ -115,27 +113,34 @@ class DataFusionNode(Node):
             return
         self.last_time = now
 
+        # 目标角度
         bearing = get_bearing_point_2_point_NED(self.current_gps, self.target_gps)
         pitch = get_pitch_point_2_point_NED(self.current_gps, self.target_gps)
+        pitch = max(min(pitch, 45.0), -45.0)
 
-        yaw_error = wrap_angle(bearing - self.imu_yaw)
+        # === 关键：天线反装，航向补偿 180° ===
+        antenna_heading = wrap_angle(self.current_heading_deg - 180.0)
+
+        # 角度误差
+        yaw_error = wrap_angle(bearing - antenna_heading)
         pitch_error = pitch - self.imu_pitch
 
-        yaw_rate_ref = self.outer_pid_yaw.compute(yaw_error, dt)
-        pitch_rate_ref = self.outer_pid_pitch.compute(pitch_error, dt)
+        # PID 输出角速度
+        yaw_vel = self.pid_yaw.compute(yaw_error, dt)
+        pitch_vel = self.pid_pitch.compute(pitch_error, dt)
 
-        yaw_out = self.inner_pid_yaw.compute(yaw_rate_ref - self.imu_wz, dt)
-        pitch_out = self.inner_pid_pitch.compute(pitch_rate_ref - self.imu_wy, dt)
+        # 发布给转台执行节点
+        cmd_msg = Vector3(x=yaw_vel, y=pitch_vel, z=2)  # MODE_VEL
+        self.pub_gimbal_cmd.publish(cmd_msg)
 
-        target_msg = Vector3(x=bearing, y=pitch, z=0.0)
-        self.pub_target_angles.publish(target_msg)
-
-        pid_msg = Vector3(x=yaw_out, y=pitch_out, z=0.0)
-        self.pub_pid_output.publish(pid_msg)
+        # 调试显示
+        self.pub_target_angles.publish(Vector3(x=bearing, y=pitch, z=0.0))
 
         self.get_logger().info_throttle(
             1.0,
-            f"[控制] 目标(yaw={bearing:.2f}, pitch={pitch:.2f}) | 输出(yaw={yaw_out:.3f}, pitch={pitch_out:.3f})"
+            f"[控制] 目标(yaw={bearing:.2f}, pitch={pitch:.2f}) | "
+            f"当前天线航向={antenna_heading:.2f} | "
+            f"输出速度(yaw={yaw_vel:.3f}, pitch={pitch_vel:.3f})"
         )
 
 

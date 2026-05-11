@@ -1,0 +1,17 @@
+[0.675s] Invoking command in '/home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1/build --no-deps symlink_data
+[0.900s] running develop
+[1.031s] running egg_info
+[1.043s] writing sciroad1.egg-info/PKG-INFO
+[1.044s] writing dependency_links to sciroad1.egg-info/dependency_links.txt
+[1.044s] writing entry points to sciroad1.egg-info/entry_points.txt
+[1.044s] writing requirements to sciroad1.egg-info/requires.txt
+[1.045s] writing top-level names to sciroad1.egg-info/top_level.txt
+[1.070s] reading manifest file 'sciroad1.egg-info/SOURCES.txt'
+[1.071s] writing manifest file 'sciroad1.egg-info/SOURCES.txt'
+[1.084s] running build_ext
+[1.084s] Creating /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/lib/python3.12/site-packages/sciroad1.egg-link (link to .)
+[1.085s] Installing gimbal_control_node script to /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/lib/sciroad1
+[1.085s] 
+[1.085s] Installed /home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1
+[1.085s] running symlink_data
+[1.102s] Invoked command in '/home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1/build --no-deps symlink_data

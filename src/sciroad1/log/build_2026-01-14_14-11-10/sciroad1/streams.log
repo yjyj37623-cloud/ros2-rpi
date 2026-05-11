@@ -1,0 +1,26 @@
+[0.754s] Invoking command in '/home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1/build --no-deps symlink_data
+[0.976s] running develop
+[1.103s] running egg_info
+[1.103s] creating sciroad1.egg-info
+[1.114s] writing sciroad1.egg-info/PKG-INFO
+[1.115s] writing dependency_links to sciroad1.egg-info/dependency_links.txt
+[1.115s] writing entry points to sciroad1.egg-info/entry_points.txt
+[1.115s] writing requirements to sciroad1.egg-info/requires.txt
+[1.115s] writing top-level names to sciroad1.egg-info/top_level.txt
+[1.116s] writing manifest file 'sciroad1.egg-info/SOURCES.txt'
+[1.141s] reading manifest file 'sciroad1.egg-info/SOURCES.txt'
+[1.142s] writing manifest file 'sciroad1.egg-info/SOURCES.txt'
+[1.158s] running build_ext
+[1.158s] Creating /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/lib/python3.12/site-packages/sciroad1.egg-link (link to .)
+[1.160s] Installing gimbal_control_node script to /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/lib/sciroad1
+[1.160s] 
+[1.160s] Installed /home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1
+[1.160s] running symlink_data
+[1.160s] creating /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/share/ament_index
+[1.160s] creating /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/share/ament_index/resource_index
+[1.161s] creating /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/share/ament_index/resource_index/packages
+[1.161s] symbolically linking /home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1/resource/sciroad1 -> /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/share/ament_index/resource_index/packages
+[1.161s] symbolically linking /home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1/package.xml -> /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/share/sciroad1
+[1.161s] creating /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/share/sciroad1/launch
+[1.161s] symbolically linking /home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1/launch/gimbal.launch.py -> /home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/share/sciroad1/launch
+[1.180s] Invoked command in '/home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yj/桌面/ros2-rpi/src/sciroad1/install/sciroad1/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/yj/桌面/ros2-rpi/src/sciroad1/build/sciroad1/build --no-deps symlink_data

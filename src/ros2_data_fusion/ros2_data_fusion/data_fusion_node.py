@@ -37,6 +37,15 @@ def get_pitch_point_2_point_NED(current, target):
     return math.degrees(math.atan2(d_alt, horizontal))
 
 
+def compute_distance(current, target):
+    dlat = math.radians(target['lat'] - current['lat'])
+    dlon = math.radians(target['lon'] - current['lon'])
+    d_north = dlat * EARTH_RADIUS
+    d_east = dlon * EARTH_RADIUS * math.cos(math.radians(current['lat']))
+    d_alt = target['alt'] - current['alt']
+    return math.sqrt(d_north ** 2 + d_east ** 2 + d_alt ** 2)
+
+
 def wrap_angle(angle):
     while angle >= 180.0:
         angle -= 360.0
@@ -57,27 +66,17 @@ class DataFusionNode(Node):
 
         # ========= 对方订阅 =========
         self.create_subscription(Float64MultiArray, 'target/data', self.target_data_callback, 10)
-        
-        # --- 新增：订阅对面发来的 Yaw Error (用于求和) ---
-        # 注意：这个话题由 SerialBridge 创建，用来接收对面发来的误差
-        self.create_subscription(Float64, 'target/yaw_error_rx', self.target_yaw_error_rx_callback, 10)
+        self.create_subscription(Vector3Stamped, 'target/yaw_error_rx_stamped', self.yaw_error_rx_callback, 10)
 
         # ========= 发布 =========
         self.pub_gimbal_cmd = self.create_publisher(Vector3, '/track/gimbal_cmd', 10)
         self.pub_target_angles = self.create_publisher(Vector3, 'target/angles', 10)
-        
-        # --- 新增：发布新话题 ---
-        # 1. 本机的 Yaw Error
-        self.pub_tx_yaw_error = self.create_publisher(Float64, 'target/yaw_error_tx', 10)
-        # 2. 两机之间的距离
-        self.pub_relative_distance = self.create_publisher(Float64, 'target/distance', 10)
-        # 3. 误差和
-        self.pub_error_sum = self.create_publisher(Float64, 'target/yaw_error_sum', 10)
-
-        # --- 新增：带 Header.stamp 的版本 (方便数据对齐) ---
-        self.pub_tx_yaw_error_stamped = self.create_publisher(Vector3Stamped, 'target/yaw_error_tx_stamped', 10)
+        self.pub_yaw_error_tx = self.create_publisher(Float64, 'target/yaw_error_tx', 10)
+        self.pub_yaw_error_tx_stamped = self.create_publisher(Vector3Stamped, 'target/yaw_error_tx_stamped', 10)
+        self.pub_distance = self.create_publisher(Float64, 'target/distance', 10)
         self.pub_distance_stamped = self.create_publisher(Vector3Stamped, 'target/distance_stamped', 10)
-        self.pub_error_sum_stamped = self.create_publisher(Vector3Stamped, 'target/yaw_error_sum_stamped', 10)
+        self.pub_yaw_error_sum = self.create_publisher(Float64, 'target/yaw_error_sum', 10)
+        self.pub_yaw_error_sum_stamped = self.create_publisher(Vector3Stamped, 'target/yaw_error_sum_stamped', 10)
 
         # ========= 状态量 =========
         self.current_gps = None
@@ -87,9 +86,7 @@ class DataFusionNode(Node):
         self.target_gps = None
         self.target_pitch_deg = None
         self.target_heading_deg = None
-        
-        # --- 新增：存储对面的误差 ---
-        self.received_yaw_error = None
+        self.yaw_error_rx = None
 
         # ========= 控制参数 =========
         # 先用 P 控制，别急着上 PID
@@ -170,20 +167,18 @@ class DataFusionNode(Node):
             'lon': float(msg.data[3]),
             'alt': float(msg.data[4]),
         }
-        
-    # --- 新增：接收对面发来的误差 ---
-    def target_yaw_error_rx_callback(self, msg: Float64):
-        self.received_yaw_error = msg.data
+
+    def yaw_error_rx_callback(self, msg: Vector3Stamped):
+        self.yaw_error_rx = float(msg.vector.x)
+
+    def _make_stamped(self, value, frame_id=""):
+        m = Vector3Stamped()
+        m.header.stamp = self.get_clock().now().to_msg()
+        m.header.frame_id = frame_id
+        m.vector.x = float(value)
+        return m
 
     # ========= 控制工具 =========
-    def _make_stamped(self, x=0.0, y=0.0, z=0.0):
-        msg = Vector3Stamped()
-        msg.header.stamp = self.get_clock().now().to_msg()
-        msg.vector.x = x
-        msg.vector.y = y
-        msg.vector.z = z
-        return msg
-
     def clamp(self, value, limit_abs):
         return max(min(value, limit_abs), -limit_abs)
 
@@ -204,7 +199,6 @@ class DataFusionNode(Node):
 
     # ========= 控制逻辑 =========
     def run_control(self):
-        # --- 1. 原有逻辑：获取数据 ---
         if self.current_gps is None:
             return
         if self.current_heading_deg is None:
@@ -214,7 +208,6 @@ class DataFusionNode(Node):
         if self.target_gps is None:
             return
 
-        # --- 2. 原有逻辑：计算控制量 (完全未改动) ---
         # 计算目标方位角 / 目标俯仰角
         bearing = get_bearing_point_2_point_NED(self.current_gps, self.target_gps)
         target_pitch = get_pitch_point_2_point_NED(self.current_gps, self.target_gps)
@@ -250,7 +243,7 @@ class DataFusionNode(Node):
         yaw_vel *= self.yaw_dir
         pitch_vel *= self.pitch_dir
 
-        # --- 3. 原有逻辑：发布控制命令 (完全未改动) ---
+        # 发布控制命令
         cmd_msg = Vector3()
         cmd_msg.x = yaw_vel
         cmd_msg.y = pitch_vel
@@ -264,40 +257,9 @@ class DataFusionNode(Node):
         dbg_msg.z = 0.0
         self.pub_target_angles.publish(dbg_msg)
 
-        # --- 4. 新增逻辑：新功能 (加在最后，不影响前面的控制) ---
-        
-        # 4.1 发布本机 Yaw Error
-        tx_err_msg = Float64()
-        tx_err_msg.data = yaw_error
-        self.pub_tx_yaw_error.publish(tx_err_msg)
-        self.pub_tx_yaw_error_stamped.publish(self._make_stamped(x=yaw_error))
-
-        # 4.2 计算并发布距离
-        d_lat = math.radians(self.target_gps['lat'] - self.current_gps['lat'])
-        d_lon = math.radians(self.target_gps['lon'] - self.current_gps['lon'])
-        lat_avg = math.radians((self.target_gps['lat'] + self.current_gps['lat']) / 2.0)
-
-        d_north = d_lat * EARTH_RADIUS
-        d_east = d_lon * EARTH_RADIUS * math.cos(lat_avg)
-        distance = math.sqrt(d_north**2 + d_east**2)
-
-        dist_msg = Float64()
-        dist_msg.data = distance
-        self.pub_relative_distance.publish(dist_msg)
-        self.pub_distance_stamped.publish(self._make_stamped(x=distance))
-
-        # 4.3 计算误差和
-        if self.received_yaw_error is not None:
-            error_sum = yaw_error + self.received_yaw_error
-            sum_msg = Float64()
-            sum_msg.data = error_sum
-            self.pub_error_sum.publish(sum_msg)
-            self.pub_error_sum_stamped.publish(self._make_stamped(x=error_sum))
-
-        # --- 5. 原有日志 (保持不变) ---
+        # 日志
         now = self.get_clock().now()
         if (now - self.last_print_time).nanoseconds * 1e-9 >= 1.0:
-            # 这里只打印控制相关的日志，不打印新数据，避免刷屏
             self.get_logger().info(
                 f"[控制] target_yaw={bearing:.2f}, target_pitch={target_pitch:.2f} | "
                 f"heading={self.current_heading_deg:.2f}, antenna_heading={antenna_heading:.2f} | "
@@ -305,6 +267,26 @@ class DataFusionNode(Node):
                 f"yaw_vel={yaw_vel:.3f}, pitch_vel={pitch_vel:.3f}"
             )
             self.last_print_time = now
+
+        # 发布 yaw_error_tx
+        yaw_err_msg = Float64()
+        yaw_err_msg.data = yaw_error
+        self.pub_yaw_error_tx.publish(yaw_err_msg)
+        self.pub_yaw_error_tx_stamped.publish(self._make_stamped(yaw_error))
+
+        # 计算并发布距离
+        distance = compute_distance(self.current_gps, self.target_gps)
+        dist_msg = Float64()
+        dist_msg.data = distance
+        self.pub_distance.publish(dist_msg)
+        self.pub_distance_stamped.publish(self._make_stamped(distance))
+
+        # 计算并发布 yaw_error 之和
+        yaw_sum = yaw_error + (self.yaw_error_rx if self.yaw_error_rx is not None else 0.0)
+        yaw_sum_msg = Float64()
+        yaw_sum_msg.data = yaw_sum
+        self.pub_yaw_error_sum.publish(yaw_sum_msg)
+        self.pub_yaw_error_sum_stamped.publish(self._make_stamped(yaw_sum))
 
 
 def main(args=None):
@@ -321,3 +303,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+

@@ -7,12 +7,13 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix, NavSatStatus
 from std_msgs.msg import Header, Float64, Bool
-# --- 新增引用 ---
 from geometry_msgs.msg import Vector3Stamped
+
 
 # ================= 工具函数 =================
 def NMEA_pow_n10(n):
     return math.pow(10, -n)
+
 
 def NMEA_Str2num(buf):
     buf = buf.strip()
@@ -39,6 +40,7 @@ def NMEA_Str2num(buf):
     if neg:
         res = -res
     return res, flen
+
 
 # ================= GGA 解析 =================
 def parse_GxGGA(buf):
@@ -91,8 +93,18 @@ def parse_GxGGA(buf):
         'gps_state': gps_state,
     }
 
+
 # ================= HEADINGA 解析 =================
 def parse_HEADINGA(buf):
+    """
+    参考单片机 C 代码：
+      comma_pos(11) -> length
+      comma_pos(12) -> headinga
+
+    在 Python split(',') 之后对应：
+      parts[11] -> baseline length
+      parts[12] -> heading
+    """
     if not buf.startswith("#HEADINGA"):
         return None
 
@@ -100,12 +112,14 @@ def parse_HEADINGA(buf):
     if len(parts) < 13:
         return None
 
+    # parts[12] = heading，例如 333.4736
     try:
         heading_deg = float(parts[12].split('*')[0])
     except ValueError:
         return None
 
     return heading_deg
+
 
 # ================= ROS2 节点 =================
 class GPSPublisher(Node):
@@ -128,17 +142,9 @@ class GPSPublisher(Node):
             self.get_logger().error(f"❌ 打开串口失败: {e}")
             raise SystemExit
 
-        # 1. 原有发布者：经纬度
         self.fix_pub = self.create_publisher(NavSatFix, 'gps/fix', 10)
-        
-        # 2. 原有发布者：弧度航向角 (保持不变，供旧代码使用)
         self.heading_pub = self.create_publisher(Float64, 'gps/heading', 10)
-        
-        # 3. 原有发布者：定位状态
         self.fix_status_pub = self.create_publisher(Bool, 'gps/fix_status', 10)
-
-        # --- 新增发布者：度单位航向角 (带时间戳) ---
-        # 使用 Vector3 消息类型，x 存角度，Header 存时间戳
         self.heading_deg_pub = self.create_publisher(Vector3Stamped, 'gps/heading_deg', 10)
 
         self.buffer = ""
@@ -211,17 +217,16 @@ class GPSPublisher(Node):
                 elif header == "#HEADINGA":
                     heading_deg = parse_HEADINGA(line)
                     if heading_deg is not None:
-                        # --- 1. 发布原有的弧度消息 (保持不变) ---
+                        # 发布弧度，给 ROS 用
                         self.heading_pub.publish(Float64(data=math.radians(heading_deg)))
-                        
-                        # --- 2. 发布新的度消息 (带时间戳) ---
-                        msg_deg = Vector3Stamped()
-                        msg_deg.header.stamp = self.get_clock().now().to_msg()
-                        msg_deg.header.frame_id = "gps_link"
-                        msg_deg.vector.x = heading_deg
-                        self.heading_deg_pub.publish(msg_deg)
-
                         self.latest_heading_deg = heading_deg
+
+                        # 发布带时间戳的 heading (degrees)
+                        heading_stamped = Vector3Stamped()
+                        heading_stamped.header.stamp = self.get_clock().now().to_msg()
+                        heading_stamped.header.frame_id = "heading_link"
+                        heading_stamped.vector.x = heading_deg
+                        self.heading_deg_pub.publish(heading_stamped)
 
                         self.maybe_print()
 
@@ -249,6 +254,7 @@ class GPSPublisher(Node):
         self.get_logger().info(f"📍 {gps_str} | 🧭 heading={heading_str}")
         self.last_print_time = now
 
+
 def main(args=None):
     rclpy.init(args=args)
     node = GPSPublisher()
@@ -260,5 +266,7 @@ def main(args=None):
         node.destroy_node()
         rclpy.shutdown()
 
+
 if __name__ == '__main__':
     main()
+

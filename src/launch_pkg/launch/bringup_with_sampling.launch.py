@@ -64,7 +64,7 @@ def generate_launch_description():
         package='sciroad1',
         executable='keepsampling_node',
         name='keepsampling_node',
-        output='screen'
+        output='screen',
     )
 
     return LaunchDescription([

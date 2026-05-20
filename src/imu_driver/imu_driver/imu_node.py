@@ -32,26 +32,26 @@ class IMUPitchNode(Node):
 
         try:
             self.ser = serial.Serial(port, baudrate, timeout=0.5)
-            self.get_logger().info(f"IMU 串口打开成功: {port}")
+            self.get_logger().info(f"✅ IMU 串口打开成功: {port}")
         except Exception as e:
-            self.get_logger().error(f"串口打开失败: {e}")
+            self.get_logger().error(f"❌ 串口打开失败: {e}")
             raise SystemExit
 
-        # 原有发布者: 纯数值俯仰角 (保持不变)
+        # 只发布俯仰角
         self.pitch_pub = self.create_publisher(Float64, 'handsfree/pitch', 10)
-
-        # 新增: 带 Header.stamp 的俯仰角
         self.pitch_stamped_pub = self.create_publisher(Vector3Stamped, 'handsfree/pitch_stamped', 10)
 
+        # 严格逐字节状态机
         self.buff = {}
         self.key = 0
 
+        # 打印控制
         self.last_print_time = self.get_clock().now()
         self.print_interval = 1.0
 
         self.create_timer(0.002, self.read_serial)
 
-        self.get_logger().info("IMU 俯仰角节点启动完成")
+        self.get_logger().info("🧭 IMU 俯仰角节点启动完成")
 
     def read_serial(self):
         if self.ser.in_waiting > 0:
@@ -63,16 +63,19 @@ class IMUPitchNode(Node):
         self.buff[self.key] = raw
         self.key += 1
 
+        # 帧头必须是 0x55
         if self.buff[0] != 0x55:
             self.buff = {}
             self.key = 0
             return
 
+        # 一帧 11 字节
         if self.key < 11:
             return
 
         data = list(self.buff.values())
 
+        # 只解析欧拉角帧 0x53
         if data[1] == 0x53:
             if checkSum(data[0:10], data[10]):
                 angles = [
@@ -81,7 +84,7 @@ class IMUPitchNode(Node):
                 ]
                 pitch_deg = angles[1]
                 self.publish_pitch(pitch_deg)
-
+        # 当前帧处理完，清空缓存
         self.buff = {}
         self.key = 0
 
@@ -90,11 +93,12 @@ class IMUPitchNode(Node):
         msg.data = pitch_deg
         self.pitch_pub.publish(msg)
 
-        smsg = Vector3Stamped()
-        smsg.header.stamp = self.get_clock().now().to_msg()
-        smsg.header.frame_id = "imu_link"
-        smsg.vector.x = pitch_deg
-        self.pitch_stamped_pub.publish(smsg)
+        # 发布带时间戳的 pitch
+        pitch_stamped = Vector3Stamped()
+        pitch_stamped.header.stamp = self.get_clock().now().to_msg()
+        pitch_stamped.header.frame_id = "imu_link"
+        pitch_stamped.vector.x = pitch_deg
+        self.pitch_stamped_pub.publish(pitch_stamped)
 
         current_time = self.get_clock().now()
         time_diff = (current_time - self.last_print_time).nanoseconds * 1e-9

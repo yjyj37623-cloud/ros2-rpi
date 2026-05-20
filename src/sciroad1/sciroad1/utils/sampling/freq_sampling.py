@@ -104,7 +104,7 @@ class JustKeepSamplingBase(OnlyRxSampleBase):
         if self.ros_node:
             self.publisher_ = self.ros_node.create_publisher(Float64MultiArray, 'sample_data', 10)
             self.publisher_stamped_ = self.ros_node.create_publisher(Vector3Stamped, 'sample_data_stamped', 10)
-            self.ros_node.get_logger().info("采样类已连接到 ROS Topic: sample_data + sample_data_stamped")
+            self.ros_node.get_logger().info("🔌 采样类已连接到 ROS Topic: sample_data")
         else:
             self.publisher_ = None
             self.publisher_stamped_ = None
@@ -128,18 +128,17 @@ class JustKeepSamplingBase(OnlyRxSampleBase):
         print("停")
 
     def _publish_data(self, val, freq_val):
+        """辅助函数：发布数据到 Topic"""
         if self.publisher_:
             msg = Float64MultiArray()
             msg.data = [float(freq_val), float(val)]
             self.publisher_.publish(msg)
 
-        if self.publisher_stamped_:
-            smsg = Vector3Stamped()
-            smsg.header.stamp = self.ros_node.get_clock().now().to_msg()
-            smsg.vector.x = float(freq_val)
-            smsg.vector.y = float(val)
-            smsg.vector.z = 0.0
-            self.publisher_stamped_.publish(smsg)
+            stamped = Vector3Stamped()
+            stamped.header.stamp = self.ros_node.get_clock().now().to_msg()
+            stamped.vector.x = float(freq_val)
+            stamped.vector.y = float(val)
+            self.publisher_stamped_.publish(stamped)
 
     def get_series_step_freq(self, cmd_args=None):
         if cmd_args is None:

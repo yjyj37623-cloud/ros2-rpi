@@ -1,1 +1,1 @@
-/home/yj/桌面/ros2-rpi/build/sciroad1/launch/gimbal.launch.py
+/home/hhhh/Desktop/ros2-rpi/build/sciroad1/launch/gimbal.launch.py

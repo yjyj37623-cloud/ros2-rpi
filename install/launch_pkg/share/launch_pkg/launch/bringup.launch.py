@@ -1,1 +1,1 @@
-/home/yj/桌面/ros2-rpi/build/launch_pkg/launch/bringup.launch.py
+/home/hhhh/Desktop/ros2-rpi/build/launch_pkg/launch/bringup.launch.py

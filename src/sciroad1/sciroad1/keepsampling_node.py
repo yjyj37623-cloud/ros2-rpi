@@ -97,6 +97,7 @@ class FreqSamplingBase(SampleBase):
 
 class JustKeepSamplingBase(OnlyRxSampleBase):
     def __init__(self, args, ros_node=None): # 1. 增加 ros_node 参数
+        self.sampling_flag = getattr(args, 'sampling_flag', True)
         super(JustKeepSamplingBase, self).__init__(args)
 
         # 2. 初始化 ROS 发布者

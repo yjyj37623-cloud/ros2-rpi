@@ -15,7 +15,7 @@ def generate_launch_description():
             parameters=[
                 {
                     'port': '/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_D3091391-if00-port0',   # 根据你的设备调整
-                    'baud': 57600
+                    'baud': 115200
                 }
             ]
         )

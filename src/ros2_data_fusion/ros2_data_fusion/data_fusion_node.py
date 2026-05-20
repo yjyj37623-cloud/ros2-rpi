@@ -117,7 +117,7 @@ class DataFusionNode(Node):
         self.declare_parameter('steady_window_size', 30)
         self.declare_parameter('steady_entry_threshold_deg', 0.15)
         self.declare_parameter('steady_exit_threshold_deg', 1.0)
-        self.declare_parameter('steady_exit_count', 3)
+        self.declare_parameter('steady_exit_count', 5)
 
         self.error_history = deque(maxlen=self.get_parameter('steady_window_size').value)
         self.exit_count = 0  # 连续超阈值计数(退出用)
@@ -239,7 +239,7 @@ class DataFusionNode(Node):
         # pitch 误差
         pitch_error = target_pitch - self.imu_pitch
 
-        # 稳定检测：过去N次中≥80%误差<0.15°→进入，连续3次>1.0°→退出
+        # 稳定检测：过去N次中≥80%误差<0.15°→进入，连续5次>1.0°→退出
         self.error_history.append(abs(yaw_error))
         window = list(self.error_history)
         if len(window) >= self.steady_window_size:

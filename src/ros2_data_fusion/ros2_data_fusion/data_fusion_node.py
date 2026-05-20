@@ -111,13 +111,13 @@ class DataFusionNode(Node):
         # 目标俯仰角限幅
         self.declare_parameter('target_pitch_limit_deg', 30.0)
 
-        self.declare_parameter('yaw_kp_steady', 0.08)
+        self.declare_parameter('yaw_kp_steady', 0.01)
         self.declare_parameter('yaw_deadband_steady_deg', 0.5)
         self.declare_parameter('yaw_min_vel_steady', 0.0)
-        self.declare_parameter('steady_window_size', 30)
+        self.declare_parameter('steady_window_size', 50)
         self.declare_parameter('steady_entry_threshold_deg', 0.15)
-        self.declare_parameter('steady_exit_threshold_deg', 1.0)
-        self.declare_parameter('steady_exit_count', 11)
+        self.declare_parameter('steady_exit_threshold_deg', 0.9)
+        self.declare_parameter('steady_exit_count', 43)
 
         self.error_history = deque(maxlen=self.get_parameter('steady_window_size').value)
         self.exit_count = 0  # 连续超阈值计数(退出用)

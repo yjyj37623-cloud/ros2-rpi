@@ -69,7 +69,7 @@ class SerialBridge(Node):
         # 带时间戳的发布
         self.target_pitch_stamped_pub = self.create_publisher(Vector3Stamped, 'target/pitch_stamped', 10)
         self.target_heading_deg_stamped_pub = self.create_publisher(Vector3Stamped, 'target/heading_deg_stamped', 10)
-        self.target_yaw_error_rx_stamped_pub = self.create_publisher(Vector3Stamped, 'target/yaw_error_rx_stamped', 10)
+        self.target_yaw_error_rx_pub = self.create_publisher(Vector3Stamped, 'target/yaw_error_rx', 10)
 
         # ========= 串口接收缓存 =========
         self.rx_buffer = ""
@@ -343,7 +343,7 @@ class SerialBridge(Node):
                 return
 
             yerr = float(parts[1])
-            self.target_yaw_error_rx_stamped_pub.publish(
+            self.target_yaw_error_rx_pub.publish(
                 self._make_stamped(yerr))
 
             self.maybe_log_recv(f"YERR recv: {yerr:.3f} deg")

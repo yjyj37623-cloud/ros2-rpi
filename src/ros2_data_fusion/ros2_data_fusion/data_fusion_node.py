@@ -66,7 +66,7 @@ class DataFusionNode(Node):
 
         # ========= 对方订阅 =========
         self.create_subscription(Float64MultiArray, 'target/data', self.target_data_callback, 10)
-        self.create_subscription(Vector3Stamped, 'target/yaw_error_rx_stamped', self.yaw_error_rx_callback, 10)
+        self.create_subscription(Vector3Stamped, 'target/yaw_error_rx', self.yaw_error_rx_callback, 10)
 
         # ========= 发布 =========
         self.pub_gimbal_cmd = self.create_publisher(Vector3, '/track/gimbal_cmd', 10)

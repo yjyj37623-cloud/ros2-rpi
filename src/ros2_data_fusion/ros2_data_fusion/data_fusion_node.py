@@ -111,11 +111,15 @@ class DataFusionNode(Node):
         self.declare_parameter('target_pitch_limit_deg', 30.0)
 
         self.declare_parameter('yaw_kp_steady', 0.08)
+        self.declare_parameter('yaw_deadband_steady_deg', 0.5)
+        self.declare_parameter('yaw_min_vel_steady', 0.0)
         self.steady_count = 0
 
         self.yaw_kp = float(self.get_parameter('yaw_kp').value)
         self.pitch_kp = float(self.get_parameter('pitch_kp').value)
         self.yaw_kp_steady = float(self.get_parameter('yaw_kp_steady').value)
+        self.yaw_deadband_steady_deg = float(self.get_parameter('yaw_deadband_steady_deg').value)
+        self.yaw_min_vel_steady = float(self.get_parameter('yaw_min_vel_steady').value)
 
         self.yaw_vel_limit = float(self.get_parameter('yaw_vel_limit').value)
         self.pitch_vel_limit = float(self.get_parameter('pitch_vel_limit').value)
@@ -223,19 +227,19 @@ class DataFusionNode(Node):
         # pitch 误差
         pitch_error = target_pitch - self.imu_pitch
 
-        # 快对准检测：连续15次误差<0.5° → 切换小KP抑制噪声
+        # 快对准检测：连续15次误差<0.5° → 切换稳定参数抑制噪声
         if abs(yaw_error) < 0.5:
             self.steady_count += 1
         else:
             self.steady_count = 0
-        eff_kp = self.yaw_kp_steady if self.steady_count >= 15 else self.yaw_kp
+        steady = self.steady_count >= 15
 
         # 纯P控制
         yaw_vel = self.calc_p_output(
             error=yaw_error,
-            kp=eff_kp,
-            deadband=self.yaw_deadband_deg,
-            min_vel=self.yaw_min_vel,
+            kp=self.yaw_kp_steady if steady else self.yaw_kp,
+            deadband=self.yaw_deadband_steady_deg if steady else self.yaw_deadband_deg,
+            min_vel=self.yaw_min_vel_steady if steady else self.yaw_min_vel,
             vel_limit=self.yaw_vel_limit
         )
 

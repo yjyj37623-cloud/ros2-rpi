@@ -87,7 +87,7 @@ class DataFusionNode(Node):
 
         # ========= 控制参数 =========
         # 先用 P 控制，别急着上 PID
-        self.declare_parameter('yaw_kp', 0.2)
+        self.declare_parameter('yaw_kp', 0.6)
         self.declare_parameter('pitch_kp', 0.2)
 
         self.declare_parameter('yaw_vel_limit', 15)
@@ -97,7 +97,7 @@ class DataFusionNode(Node):
         self.declare_parameter('pitch_deadband_deg', 0.2)
 
         # 为了防止命令太小带不动，给个最小启动速度
-        self.declare_parameter('yaw_min_vel', 0.20)
+        self.declare_parameter('yaw_min_vel', 0.06)
         self.declare_parameter('pitch_min_vel', 0.15)
 
         # 方向反了时，只改这个参数即可

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import math
+from collections import deque
 import rclpy
 from rclpy.node import Node
 
@@ -113,13 +114,24 @@ class DataFusionNode(Node):
         self.declare_parameter('yaw_kp_steady', 0.08)
         self.declare_parameter('yaw_deadband_steady_deg', 0.5)
         self.declare_parameter('yaw_min_vel_steady', 0.0)
-        self.steady_count = 0
+        self.declare_parameter('steady_window_size', 30)
+        self.declare_parameter('steady_entry_threshold_deg', 0.15)
+        self.declare_parameter('steady_exit_threshold_deg', 1.0)
+        self.declare_parameter('steady_exit_count', 3)
+
+        self.error_history = deque(maxlen=self.get_parameter('steady_window_size').value)
+        self.exit_count = 0  # 连续超阈值计数(退出用)
+        self.steady = False
 
         self.yaw_kp = float(self.get_parameter('yaw_kp').value)
         self.pitch_kp = float(self.get_parameter('pitch_kp').value)
         self.yaw_kp_steady = float(self.get_parameter('yaw_kp_steady').value)
         self.yaw_deadband_steady_deg = float(self.get_parameter('yaw_deadband_steady_deg').value)
         self.yaw_min_vel_steady = float(self.get_parameter('yaw_min_vel_steady').value)
+        self.steady_window_size = int(self.get_parameter('steady_window_size').value)
+        self.steady_entry_threshold = float(self.get_parameter('steady_entry_threshold_deg').value)
+        self.steady_exit_threshold = float(self.get_parameter('steady_exit_threshold_deg').value)
+        self.steady_exit_count = int(self.get_parameter('steady_exit_count').value)
 
         self.yaw_vel_limit = float(self.get_parameter('yaw_vel_limit').value)
         self.pitch_vel_limit = float(self.get_parameter('pitch_vel_limit').value)
@@ -227,19 +239,28 @@ class DataFusionNode(Node):
         # pitch 误差
         pitch_error = target_pitch - self.imu_pitch
 
-        # 快对准检测：连续15次误差<0.5° → 切换稳定参数抑制噪声
-        if abs(yaw_error) < 0.5:
-            self.steady_count += 1
-        else:
-            self.steady_count = 0
-        steady = self.steady_count >= 15
+        # 稳定检测：过去N次中≥80%误差<0.15°→进入，连续3次>1.0°→退出
+        self.error_history.append(abs(yaw_error))
+        window = list(self.error_history)
+        if len(window) >= self.steady_window_size:
+            ratio = sum(1 for e in window if e < self.steady_entry_threshold) / len(window)
+            if not self.steady and ratio >= 0.8:
+                self.steady = True
+            elif self.steady:
+                if abs(yaw_error) > self.steady_exit_threshold:
+                    self.exit_count += 1
+                    if self.exit_count >= self.steady_exit_count:
+                        self.steady = False
+                        self.exit_count = 0
+                else:
+                    self.exit_count = 0
 
         # 纯P控制
         yaw_vel = self.calc_p_output(
             error=yaw_error,
-            kp=self.yaw_kp_steady if steady else self.yaw_kp,
-            deadband=self.yaw_deadband_steady_deg if steady else self.yaw_deadband_deg,
-            min_vel=self.yaw_min_vel_steady if steady else self.yaw_min_vel,
+            kp=self.yaw_kp_steady if self.steady else self.yaw_kp,
+            deadband=self.yaw_deadband_steady_deg if self.steady else self.yaw_deadband_deg,
+            min_vel=self.yaw_min_vel_steady if self.steady else self.yaw_min_vel,
             vel_limit=self.yaw_vel_limit
         )
 

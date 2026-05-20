@@ -1,0 +1,17 @@
+[2.332s] Invoking command in '/home/yj/桌面/ros2-rpi/build/gps_driver': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PS1=(my_ros_env) \[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ PYTHONPATH=/home/yj/桌面/ros2-rpi/build/gps_driver/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yj/桌面/ros2-rpi/install/gps_driver/lib/python3.12/site-packages:${PYTHONPATH} VIRTUAL_ENV_PROMPT=(my_ros_env) /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/yj/桌面/ros2-rpi/build/gps_driver/build --no-deps symlink_data
+[2.669s] running develop
+[2.838s] running egg_info
+[2.858s] writing gps_driver.egg-info/PKG-INFO
+[2.858s] writing dependency_links to gps_driver.egg-info/dependency_links.txt
+[2.858s] writing entry points to gps_driver.egg-info/entry_points.txt
+[2.860s] writing requirements to gps_driver.egg-info/requires.txt
+[2.860s] writing top-level names to gps_driver.egg-info/top_level.txt
+[2.893s] reading manifest file 'gps_driver.egg-info/SOURCES.txt'
+[2.894s] writing manifest file 'gps_driver.egg-info/SOURCES.txt'
+[2.921s] running build_ext
+[2.921s] Creating /home/yj/桌面/ros2-rpi/install/gps_driver/lib/python3.12/site-packages/gps-driver.egg-link (link to .)
+[2.922s] Installing gps_node script to /home/yj/桌面/ros2-rpi/install/gps_driver/lib/gps_driver
+[2.922s] 
+[2.922s] Installed /home/yj/桌面/ros2-rpi/build/gps_driver
+[2.922s] running symlink_data
+[3.131s] Invoked command in '/home/yj/桌面/ros2-rpi/build/gps_driver' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PS1=(my_ros_env) \[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ PYTHONPATH=/home/yj/桌面/ros2-rpi/build/gps_driver/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yj/桌面/ros2-rpi/install/gps_driver/lib/python3.12/site-packages:${PYTHONPATH} VIRTUAL_ENV_PROMPT=(my_ros_env) /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/yj/桌面/ros2-rpi/build/gps_driver/build --no-deps symlink_data

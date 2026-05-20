@@ -1,0 +1,7 @@
+Metadata-Version: 2.1
+Name: gps-driver
+Version: 0.0.1
+Summary: GPS parsing and ROS2 publishing package
+Maintainer: yj
+Maintainer-email: yj@todo.todo
+License: Apache-2.0

@@ -1,0 +1,23 @@
+running develop
+running egg_info
+creating launch_pkg.egg-info
+writing launch_pkg.egg-info/PKG-INFO
+writing dependency_links to launch_pkg.egg-info/dependency_links.txt
+writing requirements to launch_pkg.egg-info/requires.txt
+writing top-level names to launch_pkg.egg-info/top_level.txt
+writing manifest file 'launch_pkg.egg-info/SOURCES.txt'
+reading manifest file 'launch_pkg.egg-info/SOURCES.txt'
+writing manifest file 'launch_pkg.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/yj/桌面/ros2-rpi/install/launch_pkg/lib/python3.12/site-packages/launch-pkg.egg-link (link to .)
+
+Installed /home/yj/桌面/ros2-rpi/build/launch_pkg
+running symlink_data
+creating /home/yj/桌面/ros2-rpi/install/launch_pkg/share/ament_index
+creating /home/yj/桌面/ros2-rpi/install/launch_pkg/share/ament_index/resource_index
+creating /home/yj/桌面/ros2-rpi/install/launch_pkg/share/ament_index/resource_index/packages
+symbolically linking /home/yj/桌面/ros2-rpi/build/launch_pkg/resource/launch_pkg -> /home/yj/桌面/ros2-rpi/install/launch_pkg/share/ament_index/resource_index/packages
+symbolically linking /home/yj/桌面/ros2-rpi/build/launch_pkg/package.xml -> /home/yj/桌面/ros2-rpi/install/launch_pkg/share/launch_pkg
+creating /home/yj/桌面/ros2-rpi/install/launch_pkg/share/launch_pkg/launch
+symbolically linking /home/yj/桌面/ros2-rpi/build/launch_pkg/launch/only_yaw.launch.py -> /home/yj/桌面/ros2-rpi/install/launch_pkg/share/launch_pkg/launch
+symbolically linking /home/yj/桌面/ros2-rpi/build/launch_pkg/launch/bringup.launch.py -> /home/yj/桌面/ros2-rpi/install/launch_pkg/share/launch_pkg/launch

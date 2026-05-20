@@ -1,0 +1,27 @@
+[1.093s] Invoking command in '/home/yj/桌面/ros2-rpi/build/ros2_data_fusion': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PS1=(my_ros_env) \[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ PYTHONPATH=/home/yj/桌面/ros2-rpi/build/ros2_data_fusion/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yj/桌面/ros2-rpi/install/ros2_data_fusion/lib/python3.12/site-packages:${PYTHONPATH} VIRTUAL_ENV_PROMPT=(my_ros_env) /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/yj/桌面/ros2-rpi/build/ros2_data_fusion/build --no-deps symlink_data
+[1.474s] running develop
+[1.628s] running egg_info
+[1.628s] creating ros2_data_fusion.egg-info
+[1.640s] writing ros2_data_fusion.egg-info/PKG-INFO
+[1.640s] writing dependency_links to ros2_data_fusion.egg-info/dependency_links.txt
+[1.640s] writing entry points to ros2_data_fusion.egg-info/entry_points.txt
+[1.640s] writing requirements to ros2_data_fusion.egg-info/requires.txt
+[1.641s] writing top-level names to ros2_data_fusion.egg-info/top_level.txt
+[1.641s] writing manifest file 'ros2_data_fusion.egg-info/SOURCES.txt'
+[1.667s] reading manifest file 'ros2_data_fusion.egg-info/SOURCES.txt'
+[1.667s] writing manifest file 'ros2_data_fusion.egg-info/SOURCES.txt'
+[1.680s] running build_ext
+[1.681s] Creating /home/yj/桌面/ros2-rpi/install/ros2_data_fusion/lib/python3.12/site-packages/ros2-data-fusion.egg-link (link to .)
+[1.681s] Installing data_fusion_node script to /home/yj/桌面/ros2-rpi/install/ros2_data_fusion/lib/ros2_data_fusion
+[1.681s] Installing data_fusion_yaw_node script to /home/yj/桌面/ros2-rpi/install/ros2_data_fusion/lib/ros2_data_fusion
+[1.682s] 
+[1.682s] Installed /home/yj/桌面/ros2-rpi/build/ros2_data_fusion
+[1.682s] running symlink_data
+[1.682s] creating /home/yj/桌面/ros2-rpi/install/ros2_data_fusion/share/ament_index
+[1.682s] creating /home/yj/桌面/ros2-rpi/install/ros2_data_fusion/share/ament_index/resource_index
+[1.683s] creating /home/yj/桌面/ros2-rpi/install/ros2_data_fusion/share/ament_index/resource_index/packages
+[1.683s] symbolically linking /home/yj/桌面/ros2-rpi/build/ros2_data_fusion/resource/ros2_data_fusion -> /home/yj/桌面/ros2-rpi/install/ros2_data_fusion/share/ament_index/resource_index/packages
+[1.683s] symbolically linking /home/yj/桌面/ros2-rpi/build/ros2_data_fusion/package.xml -> /home/yj/桌面/ros2-rpi/install/ros2_data_fusion/share/ros2_data_fusion
+[1.683s] creating /home/yj/桌面/ros2-rpi/install/ros2_data_fusion/share/ros2_data_fusion/launch
+[1.684s] symbolically linking /home/yj/桌面/ros2-rpi/build/ros2_data_fusion/launch/data_fusion.launch.py -> /home/yj/桌面/ros2-rpi/install/ros2_data_fusion/share/ros2_data_fusion/launch
+[1.878s] Invoked command in '/home/yj/桌面/ros2-rpi/build/ros2_data_fusion' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PS1=(my_ros_env) \[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ PYTHONPATH=/home/yj/桌面/ros2-rpi/build/ros2_data_fusion/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/yj/桌面/ros2-rpi/install/ros2_data_fusion/lib/python3.12/site-packages:${PYTHONPATH} VIRTUAL_ENV_PROMPT=(my_ros_env) /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/yj/桌面/ros2-rpi/build/ros2_data_fusion/build --no-deps symlink_data

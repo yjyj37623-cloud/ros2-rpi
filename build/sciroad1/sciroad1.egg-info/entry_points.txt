@@ -1,0 +1,5 @@
+[console_scripts]
+gimbal_control_node = sciroad1.turntable_control_node:main
+keepsampling_node = sciroad1.keepsampling_node:main
+test_pan_node = sciroad1.test_pan_node:main
+turntable_control_yaw_node = sciroad1.turntable_control_yaw_node:main

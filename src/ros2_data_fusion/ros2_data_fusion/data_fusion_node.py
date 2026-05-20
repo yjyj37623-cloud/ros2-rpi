@@ -71,12 +71,9 @@ class DataFusionNode(Node):
         # ========= 发布 =========
         self.pub_gimbal_cmd = self.create_publisher(Vector3, '/track/gimbal_cmd', 10)
         self.pub_target_angles = self.create_publisher(Vector3, 'target/angles', 10)
-        self.pub_yaw_error_tx = self.create_publisher(Float64, 'target/yaw_error_tx', 10)
-        self.pub_yaw_error_tx_stamped = self.create_publisher(Vector3Stamped, 'target/yaw_error_tx_stamped', 10)
-        self.pub_distance = self.create_publisher(Float64, 'target/distance', 10)
-        self.pub_distance_stamped = self.create_publisher(Vector3Stamped, 'target/distance_stamped', 10)
-        self.pub_yaw_error_sum = self.create_publisher(Float64, 'target/yaw_error_sum', 10)
-        self.pub_yaw_error_sum_stamped = self.create_publisher(Vector3Stamped, 'target/yaw_error_sum_stamped', 10)
+        self.pub_yaw_error_tx = self.create_publisher(Vector3Stamped, 'target/yaw_error_tx', 10)
+        self.pub_distance = self.create_publisher(Vector3Stamped, 'target/distance', 10)
+        self.pub_yaw_error_sum = self.create_publisher(Vector3Stamped, 'target/yaw_error_sum', 10)
 
         # ========= 状态量 =========
         self.current_gps = None
@@ -268,25 +265,16 @@ class DataFusionNode(Node):
             )
             self.last_print_time = now
 
-        # 发布 yaw_error_tx
-        yaw_err_msg = Float64()
-        yaw_err_msg.data = yaw_error
-        self.pub_yaw_error_tx.publish(yaw_err_msg)
-        self.pub_yaw_error_tx_stamped.publish(self._make_stamped(yaw_error))
+        # 发布 yaw_error_tx（带时间戳和数值在同一消息中）
+        self.pub_yaw_error_tx.publish(self._make_stamped(yaw_error))
 
         # 计算并发布距离
         distance = compute_distance(self.current_gps, self.target_gps)
-        dist_msg = Float64()
-        dist_msg.data = distance
-        self.pub_distance.publish(dist_msg)
-        self.pub_distance_stamped.publish(self._make_stamped(distance))
+        self.pub_distance.publish(self._make_stamped(distance))
 
         # 计算并发布 yaw_error 之和
         yaw_sum = yaw_error + (self.yaw_error_rx if self.yaw_error_rx is not None else 0.0)
-        yaw_sum_msg = Float64()
-        yaw_sum_msg.data = yaw_sum
-        self.pub_yaw_error_sum.publish(yaw_sum_msg)
-        self.pub_yaw_error_sum_stamped.publish(self._make_stamped(yaw_sum))
+        self.pub_yaw_error_sum.publish(self._make_stamped(yaw_sum))
 
 
 def main(args=None):

@@ -1,0 +1,3 @@
+[console_scripts]
+serial_bridge = ros2_serial_bridge.ros2_serial_bridge:main
+serial_bridge_yaw_node = ros2_serial_bridge.serial_bridge_yaw_node:main

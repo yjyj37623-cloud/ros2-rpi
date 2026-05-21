@@ -1,0 +1,7 @@
+Metadata-Version: 2.1
+Name: ros2-serial-bridge
+Version: 0.0.0
+Summary: ROS2 Serial Bridge
+Maintainer: yj
+Maintainer-email: yjyj37623@gmail.com
+License: Apache-2.0

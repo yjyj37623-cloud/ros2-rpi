@@ -125,11 +125,9 @@ class JustKeepSamplingBase(OnlyRxSampleBase):
         print("停")
 
     def _publish_data(self, val, freq_val):
-        """辅助函数：发布数据到 Topic"""
         if self.publisher_:
             msg = Float64MultiArray()
-            # 发布格式：[频率, 功率值]
-            msg.data = [float(freq_val), float(val)]
+            msg.data = [float(time.time()), float(freq_val), float(val)]
             self.publisher_.publish(msg)
 
     def get_series_step_freq(self, cmd_args=None):

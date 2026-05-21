@@ -6,6 +6,7 @@ import struct
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64
+from geometry_msgs.msg import Vector3Stamped
 
 
 def checkSum(list_data, check_data):
@@ -38,6 +39,7 @@ class IMUPitchNode(Node):
 
         # 只发布俯仰角
         self.pitch_pub = self.create_publisher(Float64, 'handsfree/pitch', 10)
+        self.pitch_stamped_pub = self.create_publisher(Vector3Stamped, 'handsfree/pitch_stamped', 10)
 
         # 严格逐字节状态机
         self.buff = {}
@@ -90,6 +92,13 @@ class IMUPitchNode(Node):
         msg = Float64()
         msg.data = pitch_deg
         self.pitch_pub.publish(msg)
+
+        # 发布带时间戳的 pitch
+        pitch_stamped = Vector3Stamped()
+        pitch_stamped.header.stamp = self.get_clock().now().to_msg()
+        pitch_stamped.header.frame_id = "imu_link"
+        pitch_stamped.vector.x = pitch_deg
+        self.pitch_stamped_pub.publish(pitch_stamped)
 
         current_time = self.get_clock().now()
         time_diff = (current_time - self.last_print_time).nanoseconds * 1e-9

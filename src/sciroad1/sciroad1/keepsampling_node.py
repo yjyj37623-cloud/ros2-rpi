@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import sys
 import rclpy
 from rclpy.node import Node
 
@@ -54,6 +55,14 @@ class KeepSamplingNode(Node):
 
 
 def main(args=None):
+    # 过滤 ROS2 参数，避免 argparse 解析 --ros-args 时报错
+    filtered = [sys.argv[0]]
+    for a in sys.argv[1:]:
+        if a == '--ros-args':
+            break
+        filtered.append(a)
+    sys.argv = filtered
+
     rclpy.init(args=args)
     node = KeepSamplingNode()
 

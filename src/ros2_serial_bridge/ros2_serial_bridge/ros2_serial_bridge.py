@@ -8,6 +8,7 @@ from rclpy.node import Node
 
 from sensor_msgs.msg import NavSatFix, NavSatStatus
 from std_msgs.msg import Float64, Float64MultiArray
+from geometry_msgs.msg import Vector3Stamped
 
 
 class SerialBridge(Node):
@@ -64,6 +65,11 @@ class SerialBridge(Node):
         self.target_heading_pub = self.create_publisher(Float64, 'target/heading', 10)
         self.target_gps_pub = self.create_publisher(NavSatFix, 'target/gps', 10)
         self.target_data_pub = self.create_publisher(Float64MultiArray, 'target/data', 10)
+
+        # 带时间戳的发布
+        self.target_pitch_stamped_pub = self.create_publisher(Vector3Stamped, 'target/pitch_stamped', 10)
+        self.target_heading_deg_stamped_pub = self.create_publisher(Vector3Stamped, 'target/heading_deg_stamped', 10)
+        self.target_yaw_error_rx_pub = self.create_publisher(Vector3Stamped, 'target/yaw_error_rx', 10)
 
         # ========= 串口接收缓存 =========
         self.rx_buffer = ""
@@ -200,6 +206,8 @@ class SerialBridge(Node):
                     self.parse_target_gps(line)
                 elif line.startswith("DATA,"):
                     self.parse_target_data(line)
+                elif line.startswith("YERR,"):
+                    self.parse_target_yerr(line)
 
         except Exception as e:
             self.get_logger().warn(f"串口接收异常: {e}")
@@ -218,6 +226,9 @@ class SerialBridge(Node):
             msg.data = pitch_deg
             self.target_pitch_pub.publish(msg)
 
+            self.target_pitch_stamped_pub.publish(
+                self._make_stamped(pitch_deg))
+
             self.maybe_log_recv(f"PITCH recv: {pitch_deg:.2f} deg")
 
         except Exception as e:
@@ -235,6 +246,9 @@ class SerialBridge(Node):
             msg = Float64()
             msg.data = math.radians(heading_deg)
             self.target_heading_pub.publish(msg)
+
+            self.target_heading_deg_stamped_pub.publish(
+                self._make_stamped(heading_deg))
 
             self.maybe_log_recv(f"HEADING recv: {heading_deg:.2f} deg")
 
@@ -319,6 +333,31 @@ class SerialBridge(Node):
 
         except Exception as e:
             self.get_logger().warn(f"解析目标 DATA 失败: {e} | 原始数据: {line}")
+
+    # ================= 解析：YERR =================
+    def parse_target_yerr(self, line: str):
+        try:
+            parts = line.split(',')
+            if len(parts) != 2:
+                self.get_logger().warn(f"YERR 协议字段数错误: {line}")
+                return
+
+            yerr = float(parts[1])
+            self.target_yaw_error_rx_pub.publish(
+                self._make_stamped(yerr))
+
+            self.maybe_log_recv(f"YERR recv: {yerr:.3f} deg")
+
+        except Exception as e:
+            self.get_logger().warn(f"解析目标 YERR 失败: {e} | 原始数据: {line}")
+
+    # ================= 工具 =================
+    def _make_stamped(self, value, frame_id=""):
+        msg = Vector3Stamped()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = frame_id
+        msg.vector.x = float(value)
+        return msg
 
     # ================= 日志节流 =================
     def maybe_log_pitch_send(self, text: str):

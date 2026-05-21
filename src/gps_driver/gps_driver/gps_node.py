@@ -7,6 +7,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix, NavSatStatus
 from std_msgs.msg import Header, Float64, Bool
+from geometry_msgs.msg import Vector3Stamped
 
 
 # ================= 工具函数 =================
@@ -144,6 +145,7 @@ class GPSPublisher(Node):
         self.fix_pub = self.create_publisher(NavSatFix, 'gps/fix', 10)
         self.heading_pub = self.create_publisher(Float64, 'gps/heading', 10)
         self.fix_status_pub = self.create_publisher(Bool, 'gps/fix_status', 10)
+        self.heading_deg_pub = self.create_publisher(Vector3Stamped, 'gps/heading_deg', 10)
 
         self.buffer = ""
         self.NMEA_HEADERS = ["$GPGGA", "$GNGGA", "#HEADINGA"]
@@ -218,6 +220,13 @@ class GPSPublisher(Node):
                         # 发布弧度，给 ROS 用
                         self.heading_pub.publish(Float64(data=math.radians(heading_deg)))
                         self.latest_heading_deg = heading_deg
+
+                        # 发布带时间戳的 heading (degrees)
+                        heading_stamped = Vector3Stamped()
+                        heading_stamped.header.stamp = self.get_clock().now().to_msg()
+                        heading_stamped.header.frame_id = "heading_link"
+                        heading_stamped.vector.x = heading_deg
+                        self.heading_deg_pub.publish(heading_stamped)
 
                         self.maybe_print()
 

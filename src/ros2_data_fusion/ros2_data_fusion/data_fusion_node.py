@@ -102,7 +102,7 @@ class DataFusionNode(Node):
         self.declare_parameter('pitch_min_vel', 0.15)
 
         # 方向反了时，只改这个参数即可
-        self.declare_parameter('yaw_dir', 1.0)
+        self.declare_parameter('yaw_dir', -1.0)
         self.declare_parameter('pitch_dir', 1.0)
 
         # 这里按你的要求，先去掉 180° 补偿

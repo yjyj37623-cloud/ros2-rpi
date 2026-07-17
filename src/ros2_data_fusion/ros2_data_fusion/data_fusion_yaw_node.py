@@ -63,7 +63,7 @@ class DataFusionYawNode(Node):
         self.declare_parameter('yaw_min_vel', 0.20)
 
         # 如果 pan 方向反了，只改这个参数
-        self.declare_parameter('yaw_dir', 1.0)
+        self.declare_parameter('yaw_dir', -1.0)
 
         # heading 偏置补偿
         self.declare_parameter('heading_offset_deg', 0.0)

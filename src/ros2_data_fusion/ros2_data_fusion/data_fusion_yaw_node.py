@@ -93,7 +93,11 @@ class DataFusionYawNode(Node):
 
     def local_heading_callback(self, msg: Float64):
         # 保持和你原工程一致：上游 heading 默认是弧度
-        self.current_heading_deg = (math.degrees(float(msg.data)) + 360.0) % 360.0
+        heading_deg = (math.degrees(float(msg.data)) + 360.0) % 360.0
+        # GPS 未锁定时 heading 输出 0，忽略无效值，保持上一次有效值
+        if heading_deg < 0.01:
+            return
+        self.current_heading_deg = heading_deg
 
     def target_data_callback(self, msg: Float64MultiArray):
         # only_yaw: [heading_deg, lat, lon, alt]
